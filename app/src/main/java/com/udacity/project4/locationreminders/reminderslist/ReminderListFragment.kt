@@ -1,9 +1,14 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import com.udacity.project4.R
+import com.udacity.project4.authentication.AuthenticationActivity
+import com.udacity.project4.authentication.AuthenticationState
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
@@ -32,6 +37,18 @@ class ReminderListFragment : BaseFragment() {
         setTitle(getString(R.string.app_name))
 
         binding.refreshLayout.setOnRefreshListener { _viewModel.loadReminders() }
+
+        _viewModel.authenticationState.observe(viewLifecycleOwner, Observer {
+            when (it) {
+                AuthenticationState.AUTHENTICATED -> {
+                    // TODO: Use Userdata
+                }
+                else -> {
+                    val intent = Intent(activity, AuthenticationActivity::class.java)
+                    startActivity(intent)
+                }
+            }
+        })
 
         return binding.root
     }
