@@ -10,8 +10,7 @@ import com.udacity.project4.locationreminders.data.dto.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.instanceOf
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Before
@@ -25,6 +24,82 @@ import org.junit.runner.RunWith
 @MediumTest
 class RemindersLocalRepositoryTest {
 
-//    TODO: Add testing implementation to the RemindersLocalRepository.kt
+    private lateinit var database: RemindersDatabase
+    private lateinit var repository: RemindersLocalRepository
 
+    private val reminderTestData = ReminderDTO(
+        title = "Test Title",
+        description = "Test Description",
+        location = "Test Location",
+        latitude = 1.2345,
+        longitude = 1.2345
+    )
+
+    @get:Rule
+    val instantTaskExecutorRule = InstantTaskExecutorRule()
+
+    @Before
+    fun initDatabase() {
+        database = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            RemindersDatabase::class.java
+        ).allowMainThreadQueries().build()
+
+        repository = RemindersLocalRepository(database.reminderDao(), Dispatchers.Main)
+    }
+
+    @After
+    fun closeDatabase() {
+        database.close()
+    }
+
+    private fun cleanUpRepository() = runBlocking {
+        repository.deleteAllReminders()
+    }
+
+    @Test
+    fun insertReminderSucceeds() = runBlocking {
+        repository.saveReminder(reminderTestData)
+
+        val result = repository.getReminders()
+        assertThat(result, `is`(instanceOf(Result.Success::class.java)))
+
+        result as Result.Success
+
+        assertThat(result.data, notNullValue())
+        assertThat(result.data.size, `is`(1))
+
+        cleanUpRepository()
+    }
+
+    @Test
+    fun retrieveExistingReminderSucceeds() = runBlocking {
+        repository.saveReminder(reminderTestData)
+
+        val result = repository.getReminder(reminderTestData.id)
+        assertThat(result, `is`(instanceOf(Result.Success::class.java)))
+
+        result as Result.Success
+
+        assertThat(result, notNullValue())
+        assertThat(result.data.title, `is`(reminderTestData.title))
+        assertThat(result.data.description, `is`(reminderTestData.description))
+        assertThat(result.data.location, `is`(reminderTestData.location))
+        assertThat(result.data.latitude, `is`(reminderTestData.latitude))
+        assertThat(result.data.longitude, `is`(reminderTestData.longitude))
+        cleanUpRepository()
+    }
+
+    @Test
+    fun deleteRemindersSucceeds() = runBlocking {
+        repository.saveReminder(reminderTestData)
+        repository.deleteAllReminders()
+
+        val result = repository.getReminders()
+        assertThat(result, `is`(instanceOf(Result.Success::class.java)))
+
+        result as Result.Success
+        assertThat(result.data.size, `is`(0))
+        cleanUpRepository()
+    }
 }

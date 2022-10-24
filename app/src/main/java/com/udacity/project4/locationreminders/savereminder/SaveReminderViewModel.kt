@@ -1,6 +1,8 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.app.Application
+import android.app.PendingIntent
+import android.content.Intent
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.PointOfInterest

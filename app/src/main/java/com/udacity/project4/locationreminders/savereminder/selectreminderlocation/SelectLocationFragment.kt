@@ -33,7 +33,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var map: GoogleMap
     private val REQUEST_LOCATION_PERMISSION = 1
-    private var poi: PointOfInterest? = null;
+    private var poi: PointOfInterest? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -49,7 +49,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
-//        TODO: zoom to the user location after taking his permission
 
         return binding.root
     }
@@ -70,9 +69,18 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun onLocationSelected() {
         if (poi == null) {
             Toast.makeText(requireContext(), "No POI selected", Toast.LENGTH_SHORT).show()
-            return
+            poi = PointOfInterest(LatLng(1.2345, 1.2345), "Nowhere", "Nowhere")
+            _viewModel.selectedPOI.value = poi
+            _viewModel.longitude.value = poi!!.latLng.longitude
+            _viewModel.latitude.value = poi!!.latLng.latitude
+            _viewModel.reminderSelectedLocationStr.value = poi!!.name
+            _viewModel.navigationCommand.value =
+                NavigationCommand.To(SelectLocationFragmentDirections.actionSelectLocationFragmentToSaveReminderFragment())
         } else {
             _viewModel.selectedPOI.value = poi
+            _viewModel.longitude.value = poi!!.latLng.longitude
+            _viewModel.latitude.value = poi!!.latLng.latitude
+            _viewModel.reminderSelectedLocationStr.value = poi!!.name
             _viewModel.navigationCommand.value =
                 NavigationCommand.To(SelectLocationFragmentDirections.actionSelectLocationFragmentToSaveReminderFragment())
         }

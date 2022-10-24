@@ -9,6 +9,7 @@ import androidx.lifecycle.Observer
 import com.udacity.project4.R
 import com.udacity.project4.authentication.AuthenticationActivity
 import com.udacity.project4.authentication.AuthenticationState
+import com.udacity.project4.authentication.FirebaseUserLiveData
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
@@ -41,7 +42,6 @@ class ReminderListFragment : BaseFragment() {
         _viewModel.authenticationState.observe(viewLifecycleOwner, Observer {
             when (it) {
                 AuthenticationState.AUTHENTICATED -> {
-                    // TODO: Use Userdata
                 }
                 else -> {
                     val intent = Intent(activity, AuthenticationActivity::class.java)
@@ -88,7 +88,7 @@ class ReminderListFragment : BaseFragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.logout -> {
-//                TODO: add the logout implementation
+                //FirebaseUserLiveData().logout()
             }
         }
         return super.onOptionsItemSelected(item)
