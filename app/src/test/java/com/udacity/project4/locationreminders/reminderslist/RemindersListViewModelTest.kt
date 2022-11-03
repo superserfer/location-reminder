@@ -10,9 +10,8 @@ import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.util.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import org.hamcrest.CoreMatchers.*
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.CoreMatchers.`is`
-import org.hamcrest.CoreMatchers.not
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -54,17 +53,14 @@ class RemindersListViewModelTest {
     }
 
     @Test
-    fun emptyData_hiddenLoading() = runBlockingTest {
-        remindersListViewModel.loadReminders()
-        assertThat(remindersListViewModel.showLoading.value, `is`(false))
-    }
-
-    @Test
-    fun emptyData_displaysLoading() = runBlockingTest {
+    fun emptyData_Loading() = runBlockingTest {
         mainCoroutineRule.pauseDispatcher()
         remindersListViewModel.loadReminders()
         assertThat(remindersListViewModel.showLoading.value, `is`(true))
+        mainCoroutineRule.resumeDispatcher()
+        assertThat(remindersListViewModel.showLoading.value, `is`(false))
     }
+
 
     @Test
     fun withReminder_resultNotNull() = runBlockingTest {
@@ -73,6 +69,12 @@ class RemindersListViewModelTest {
         assertThat(remindersListViewModel.remindersList.value?.size, not(0))
         assertThat(remindersListViewModel.showNoData.value, `is`(false))
         assertThat(remindersListViewModel.showLoading.value, `is`(false))
+    }
 
+    @Test
+    fun reminders_showsError() = runBlockingTest {
+        fakeDataSource.shouldReturnError = true
+        remindersListViewModel.loadReminders()
+        assertThat(remindersListViewModel.showSnackBar, notNullValue())
     }
 }

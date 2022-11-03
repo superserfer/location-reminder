@@ -102,4 +102,22 @@ class RemindersLocalRepositoryTest {
         assertThat(result.data.size, `is`(0))
         cleanUpRepository()
     }
+
+    @Test
+    fun getReminderSucceeds() = runBlocking {
+        repository.saveReminder(reminderTestData)
+        val result = repository.getReminder(reminderTestData.id)
+        assertThat(result, `is`(instanceOf(Result.Success::class.java)))
+        result as Result.Success
+        assertThat(result.data, `is`(reminderTestData))
+        cleanUpRepository()
+    }
+
+    @Test
+    fun getReminderFails() = runBlocking {
+        repository.saveReminder(reminderTestData)
+        val result = repository.getReminder(reminderTestData.id + 1)
+        assertThat(result, `is`(instanceOf(Result.Error::class.java)))
+        cleanUpRepository()
+    }
 }

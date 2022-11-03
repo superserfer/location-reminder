@@ -5,9 +5,11 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -18,7 +20,12 @@ import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import com.udacity.project4.util.DataBindingIdlingResource
+import com.udacity.project4.util.EspressoIdlingResource
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.Matchers.`is`
+import org.hamcrest.Matchers.not
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,6 +44,8 @@ class RemindersActivityTest :
 
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
+
+    private val dataBindingIdlingResource = DataBindingIdlingResource()
 
     /**
      * As we use Koin as a Service Locator Library to develop our code, we'll also use Koin to test our code.
@@ -75,9 +84,22 @@ class RemindersActivityTest :
         }
     }
 
+    @Before
+    fun registerIdlingResource(): Unit = IdlingRegistry.getInstance().run {
+        register(EspressoIdlingResource.countingIdlingResource)
+        register(dataBindingIdlingResource)
+    }
+
+    @After
+    fun unregisterIdlingResource(): Unit = IdlingRegistry.getInstance().run {
+        unregister(EspressoIdlingResource.countingIdlingResource)
+        unregister(dataBindingIdlingResource)
+    }
+
     @Test
     fun openRemindersActivityCreateActivity() {
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        activityScenario.onActivity { dataBindingIdlingResource.activity = it }
         val title = "Test Title"
         val description = "Test Description"
 
@@ -117,7 +139,7 @@ class RemindersActivityTest :
             repository.saveReminder(reminderTestDTO)
         }
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
-
+        activityScenario.onActivity { dataBindingIdlingResource.activity = it }
         // Check if reminder is displayed
         onView(withText(reminderTestDTO.title)).check(matches(isDisplayed()))
         onView(withText(reminderTestDTO.location)).check(matches(isDisplayed()))

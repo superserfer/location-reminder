@@ -1,15 +1,23 @@
 package com.udacity.project4.locationreminders.savereminder
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.location.LocationManagerCompat
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.map
 import androidx.navigation.fragment.findNavController
 import com.google.android.gms.location.Geofence
@@ -26,7 +34,6 @@ import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.locationreminders.savereminder.GeofenceConstants.ACTION_GEOFENCE_EVENT
 import com.udacity.project4.locationreminders.savereminder.GeofenceConstants.DEFAULT_RADIUS_IN_METRES
-import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
 
 class SaveReminderFragment : BaseFragment() {
@@ -77,14 +84,13 @@ class SaveReminderFragment : BaseFragment() {
             val reminderDataItem = ReminderDataItem(
                 title, description, location, latitude, longitude, userId
             )
-
+            Toast.makeText(context, getString(R.string.reminder_saved), Toast.LENGTH_SHORT).show()
             _viewModel.saveReminder(reminderDataItem)
             createGeofencingRequest(reminderDataItem)
             findNavController().navigate(SaveReminderFragmentDirections.actionSaveReminderFragmentToReminderListFragment())
         }
     }
 
-    @SuppressLint("MissingPermission")
     private fun createGeofencingRequest(reminderDataItem: ReminderDataItem) {
         val geofence = Geofence.Builder()
             .setRequestId(reminderDataItem.id)
@@ -114,6 +120,22 @@ class SaveReminderFragment : BaseFragment() {
 
         geofencingClient = LocationServices.getGeofencingClient(requireContext())
 
+        // Permission Check
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Toast.makeText(context, getString(R.string.permission_denied_explanation), Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // Check if Location is enabled
+        if (!isLocationEnabled(requireContext())) {
+            Toast.makeText(context, getString(R.string.location_required_error), Toast.LENGTH_LONG).show()
+            return
+        }
+
         geofencingClient.addGeofences(request, pendingIntent)?.run {
             addOnSuccessListener {
                 Log.d(TAG, "Added geofence for reminder with id ${reminderDataItem.id} successfully.")
@@ -127,6 +149,11 @@ class SaveReminderFragment : BaseFragment() {
         }
     }
 
+    private fun isLocationEnabled(context: Context): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return LocationManagerCompat.isLocationEnabled(locationManager)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         //make sure to clear the view model after destroy, as it's a single view model.
@@ -135,6 +162,14 @@ class SaveReminderFragment : BaseFragment() {
 
     companion object {
         private const val TAG = "SaveReminderFragment"
+    }
+
+    private fun setDisplayHomeAsUpEnabled(bool: Boolean) {
+        if (activity is AppCompatActivity) {
+            (activity as AppCompatActivity).supportActionBar?.setDisplayHomeAsUpEnabled(
+                bool
+            )
+        }
     }
 
 }

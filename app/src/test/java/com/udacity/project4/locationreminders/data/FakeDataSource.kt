@@ -8,8 +8,14 @@ class FakeDataSource : ReminderDataSource {
 
     private val reminders: MutableList<ReminderDTO> = mutableListOf()
 
+    var shouldReturnError = false
+
     override suspend fun getReminders(): Result<List<ReminderDTO>> {
-        return Result.Success(reminders)
+        return if (shouldReturnError) {
+            Result.Error("Error occurred")
+        } else {
+            Result.Success(reminders)
+        }
     }
 
     override suspend fun saveReminder(reminder: ReminderDTO) {
@@ -17,6 +23,7 @@ class FakeDataSource : ReminderDataSource {
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
+        if (shouldReturnError) return Result.Error("Error occurred")
         val reminder = reminders.find { it.id == id }
         return when(reminder == null) {
             true -> Result.Error("Not found")
