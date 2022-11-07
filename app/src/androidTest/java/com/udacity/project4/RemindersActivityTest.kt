@@ -13,6 +13,7 @@ import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import com.google.android.material.internal.ContextUtils.getActivity
 import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
@@ -23,8 +24,7 @@ import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.util.DataBindingIdlingResource
 import com.udacity.project4.util.EspressoIdlingResource
 import kotlinx.coroutines.runBlocking
-import org.hamcrest.Matchers.`is`
-import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -99,7 +99,10 @@ class RemindersActivityTest :
     @Test
     fun openRemindersActivityCreateActivity() {
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
-        activityScenario.onActivity { dataBindingIdlingResource.activity = it }
+        activityScenario.onActivity {
+            dataBindingIdlingResource.activity = it
+            var activity = it
+        }
         val title = "Test Title"
         val description = "Test Description"
 
@@ -122,6 +125,40 @@ class RemindersActivityTest :
         // Check Result
         onView(withText(title)).check(matches(isDisplayed()))
         onView(withText(description)).check(matches(isDisplayed()))
+
+        // This would be the test for the Toast, but i there is a Bug on my version so it wont work: Issue on Github: https://github.com/android/android-test/issues/803
+        //activityScenario.onActivity {
+        //    onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(`is`(it.window.decorView)))).check(matches(isDisplayed()))
+        //}
+
+        activityScenario.close()
+    }
+
+    @Test
+    fun openRemindersActivityCreateErrorActivity() {
+        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
+        activityScenario.onActivity { dataBindingIdlingResource.activity = it }
+        val title = "Test Title"
+        val description = "Test Description"
+
+        // Open Fragment
+        onView(withId(R.id.addReminderFAB)).perform(click())
+
+        // Write the Description
+        //onView(withId(R.id.reminderTitle)).perform(typeText(title))
+        onView(withId(R.id.reminderDescription)).perform(typeText(description))
+        closeSoftKeyboard()
+
+        // Select the Location
+        onView(withId(R.id.selectLocation)).perform(click())
+        onView(withId(R.id.map)).perform(click())
+        onView(withId(R.id.confirmFAB)).perform(click())
+
+        // Save Reminder
+        onView(withId(R.id.saveReminder)).perform(click())
+
+        // Check Result
+        onView(withId(com.google.android.material.R.id.snackbar_text)).check(matches(withText(R.string.err_enter_title)))
 
         activityScenario.close()
     }

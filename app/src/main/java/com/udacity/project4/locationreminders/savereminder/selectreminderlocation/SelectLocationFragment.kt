@@ -88,7 +88,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun onLocationSelected() {
         if (!hasLocationSelected) {
-            Toast.makeText(requireContext(), "No POI selected", Toast.LENGTH_SHORT).show()
             _viewModel.longitude.value = 1.2345
             _viewModel.latitude.value = 1.2345
             _viewModel.reminderSelectedLocationStr.value = "Nowhere"

@@ -76,5 +76,6 @@ class RemindersListViewModelTest {
         fakeDataSource.shouldReturnError = true
         remindersListViewModel.loadReminders()
         assertThat(remindersListViewModel.showSnackBar, notNullValue())
+        assertThat(remindersListViewModel.showSnackBar.value, `is`("Error occurred"))
     }
 }

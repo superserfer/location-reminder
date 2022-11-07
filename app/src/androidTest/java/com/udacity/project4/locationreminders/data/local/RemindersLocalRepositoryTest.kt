@@ -118,6 +118,7 @@ class RemindersLocalRepositoryTest {
         repository.saveReminder(reminderTestData)
         val result = repository.getReminder(reminderTestData.id + 1)
         assertThat(result, `is`(instanceOf(Result.Error::class.java)))
+        assertThat((result as Result.Error).message, `is`("Reminder not found!"))
         cleanUpRepository()
     }
 }
